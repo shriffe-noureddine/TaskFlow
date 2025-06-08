@@ -7,43 +7,74 @@ import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+    private List<Task> tasks = new ArrayList<>();
+    private TaskAdapter taskAdapter;
+    private RecyclerView recyclerView;
+    private View welcomeText;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        FloatingActionButton fabAddTask = findViewById(R.id.fabAddTask);
+        // Setup RecyclerView
+        recyclerView = findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        taskAdapter = new TaskAdapter(tasks);
+        recyclerView.setAdapter(taskAdapter);
 
+        welcomeText = findViewById(R.id.welcomeText);
+
+        FloatingActionButton fabAddTask = findViewById(R.id.fabAddTask);
         fabAddTask.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Show the dialog to add a new task
                 showAddTaskDialog();
             }
         });
     }
 
     private void showAddTaskDialog() {
-        LayoutInflater inflater = LayoutInflater.from(this);
-        final View dialogView = inflater.inflate(android.R.layout.simple_list_item_1, null);
         final EditText editText = new EditText(this);
         editText.setHint("Enter task title");
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Add Task")
+        new AlertDialog.Builder(this)
+                .setTitle("Add Task")
                 .setView(editText)
                 .setPositiveButton("Add", (dialog, which) -> {
                     String taskTitle = editText.getText().toString().trim();
                     if (!taskTitle.isEmpty()) {
-                        Toast.makeText(this, "Task added: " + taskTitle, Toast.LENGTH_SHORT).show();
+                        tasks.add(new Task(taskTitle));
+                        taskAdapter.notifyItemInserted(tasks.size() - 1);
+                        updateViewVisibility();
                     } else {
                         Toast.makeText(this, "Task title cannot be empty", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    private void updateViewVisibility() {
+        if (tasks.isEmpty()) {
+            welcomeText.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
+        } else {
+            welcomeText.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateViewVisibility();
     }
 }
