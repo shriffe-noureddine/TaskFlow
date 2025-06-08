@@ -12,6 +12,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.List;
+import android.content.Context;
+import android.view.inputmethod.InputMethodManager;
 
 // ... imports remain the same
 
@@ -63,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
 
                         // Scroll to the bottom (latest task)
                         recyclerView.scrollToPosition(tasks.size() - 1);
+                        hideKeyboard(editText);
+
                     } else {
                         Toast.makeText(this, "Task title cannot be empty", Toast.LENGTH_SHORT).show();
                     }
@@ -70,7 +74,12 @@ public class MainActivity extends AppCompatActivity {
                 .setNegativeButton("Cancel", null)
                 .show();
     }
-
+    private void hideKeyboard(View view) {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
 
     private void showDeleteTaskDialog(int position) {
         new AlertDialog.Builder(this)
