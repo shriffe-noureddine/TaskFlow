@@ -1,0 +1,30 @@
+# Gradle files
+.gradle/
+build/
+*.iml
+.idea/
+*.log
+*.bin
+*.lock
+
+# Local settings
+local.properties
+.DS_Store
+
+# Android Studio specific
+.cxx/
+.externalNativeBuild/
+captures/
+output.json
+
+# OS-specific
+*.swp
+*.swo
+*.tmp
+*.bak
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# GitHub Actions secrets or config (optional)
+*.env
