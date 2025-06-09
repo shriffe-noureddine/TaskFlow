@@ -68,23 +68,27 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // Show dialog to add a new task
     private void showAddTaskDialog() {
-        final EditText editText = new EditText(this);
-        editText.setHint("Enter task title");
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View dialogView = inflater.inflate(R.layout.dialog_task, null);
+        EditText inputTitle = dialogView.findViewById(R.id.inputTitle);
+        EditText inputDescription = dialogView.findViewById(R.id.inputDescription);
+        EditText inputDueDate = dialogView.findViewById(R.id.inputDueDate);
 
         new AlertDialog.Builder(this)
                 .setTitle("Add Task")
-                .setView(editText)
+                .setView(dialogView)
                 .setPositiveButton("Add", (dialog, which) -> {
-                    String taskTitle = editText.getText().toString().trim();
-                    if (!taskTitle.isEmpty()) {
-                        tasks.add(new Task(taskTitle));
+                    String title = inputTitle.getText().toString().trim();
+                    String desc = inputDescription.getText().toString().trim();
+                    String due = inputDueDate.getText().toString().trim();
+
+                    if (!title.isEmpty()) {
+                        tasks.add(new Task(title, desc, due));
                         taskAdapter.notifyItemInserted(tasks.size() - 1);
                         saveTasks();
                         updateViewVisibility();
                         recyclerView.scrollToPosition(tasks.size() - 1);
-                        hideKeyboard(editText);
                     } else {
                         Toast.makeText(this, "Task title cannot be empty", Toast.LENGTH_SHORT).show();
                     }
@@ -93,19 +97,32 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    // Show dialog to edit an existing task
+
     private void showEditTaskDialog(int position) {
-        final EditText editText = new EditText(this);
-        editText.setText(tasks.get(position).getTitle());
-        editText.setSelection(editText.getText().length());
+        Task task = tasks.get(position);
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View dialogView = inflater.inflate(R.layout.dialog_task, null);
+        EditText inputTitle = dialogView.findViewById(R.id.inputTitle);
+        EditText inputDescription = dialogView.findViewById(R.id.inputDescription);
+        EditText inputDueDate = dialogView.findViewById(R.id.inputDueDate);
+
+        // Pre-fill with existing values
+        inputTitle.setText(task.getTitle());
+        inputDescription.setText(task.getDescription());
+        inputDueDate.setText(task.getDueDate());
 
         new AlertDialog.Builder(this)
                 .setTitle("Edit Task")
-                .setView(editText)
+                .setView(dialogView)
                 .setPositiveButton("Save", (dialog, which) -> {
-                    String newTitle = editText.getText().toString().trim();
-                    if (!newTitle.isEmpty()) {
-                        tasks.get(position).setTitle(newTitle);
+                    String title = inputTitle.getText().toString().trim();
+                    String desc = inputDescription.getText().toString().trim();
+                    String due = inputDueDate.getText().toString().trim();
+
+                    if (!title.isEmpty()) {
+                        task.setTitle(title);
+                        task.setDescription(desc);
+                        task.setDueDate(due);
                         taskAdapter.notifyItemChanged(position);
                         saveTasks();
                     } else {
@@ -115,6 +132,7 @@ public class MainActivity extends AppCompatActivity {
                 .setNegativeButton("Cancel", null)
                 .show();
     }
+
 
     // Show dialog to delete a task, with undo support
     private void showDeleteTaskDialog(int position) {
