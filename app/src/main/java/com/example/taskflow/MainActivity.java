@@ -19,6 +19,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import com.google.android.material.snackbar.Snackbar;
+import android.app.DatePickerDialog;
+import android.widget.ImageButton;
+import java.util.Calendar;
+
 
 public class MainActivity extends AppCompatActivity {
     private List<Task> tasks = new ArrayList<>();
@@ -75,6 +79,27 @@ public class MainActivity extends AppCompatActivity {
         EditText inputTitle = dialogView.findViewById(R.id.inputTitle);
         EditText inputDescription = dialogView.findViewById(R.id.inputDescription);
         EditText inputDueDate = dialogView.findViewById(R.id.inputDueDate);
+        ImageButton btnPickDate = dialogView.findViewById(R.id.btnPickDate);
+
+        View.OnClickListener pickDateListener = v -> {
+            // Get current date as default
+            final Calendar calendar = Calendar.getInstance();
+            int year = calendar.get(Calendar.YEAR);
+            int month = calendar.get(Calendar.MONTH);
+            int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+            DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                    (view, year1, monthOfYear, dayOfMonth) -> {
+                        // monthOfYear is zero-based, so add 1
+                        String selectedDate = String.format("%04d-%02d-%02d", year1, monthOfYear + 1, dayOfMonth);
+                        inputDueDate.setText(selectedDate);
+                    },
+                    year, month, day);
+            datePickerDialog.show();
+        };
+
+        inputDueDate.setOnClickListener(pickDateListener);
+        btnPickDate.setOnClickListener(pickDateListener);
 
         new AlertDialog.Builder(this)
                 .setTitle("Add Task")
@@ -111,6 +136,27 @@ public class MainActivity extends AppCompatActivity {
         inputTitle.setText(task.getTitle());
         inputDescription.setText(task.getDescription());
         inputDueDate.setText(task.getDueDate());
+        ImageButton btnPickDate = dialogView.findViewById(R.id.btnPickDate);
+
+        View.OnClickListener pickDateListener = v -> {
+            // Get current date as default
+            final Calendar calendar = Calendar.getInstance();
+            int year = calendar.get(Calendar.YEAR);
+            int month = calendar.get(Calendar.MONTH);
+            int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+            DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                    (view, year1, monthOfYear, dayOfMonth) -> {
+                        // monthOfYear is zero-based, so add 1
+                        String selectedDate = String.format("%04d-%02d-%02d", year1, monthOfYear + 1, dayOfMonth);
+                        inputDueDate.setText(selectedDate);
+                    },
+                    year, month, day);
+            datePickerDialog.show();
+        };
+
+        inputDueDate.setOnClickListener(pickDateListener);
+        btnPickDate.setOnClickListener(pickDateListener);
 
         new AlertDialog.Builder(this)
                 .setTitle("Edit Task")

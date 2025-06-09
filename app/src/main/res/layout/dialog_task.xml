@@ -20,8 +20,20 @@
 
     <EditText
         android:id="@+id/inputDueDate"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
+        android:layout_weight="1"
         android:layout_height="wrap_content"
         android:hint="Due Date (YYYY-MM-DD)"
-        android:layout_marginTop="8dp"/>
+        android:focusable="false"
+        android:clickable="true"
+        android:inputType="none"/>
+
+    <ImageButton
+        android:id="@+id/btnPickDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="Pick Date"
+        android:src="@android:drawable/ic_menu_month"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="8dp"/>
 </LinearLayout>
