@@ -17,6 +17,15 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         this.longClickListener = longClickListener;
     }
 
+    private OnTaskClickListener clickListener;
+
+    public TaskAdapter(List<Task> tasks, OnTaskLongClickListener longClickListener, OnTaskClickListener clickListener) {
+        this.tasks = tasks;
+        this.longClickListener = longClickListener;
+        this.clickListener = clickListener;
+    }
+
+
     @NonNull
     @Override
     public TaskViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -30,14 +39,22 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         Task task = tasks.get(position);
         holder.textView.setText(task.getTitle());
 
-        // Long click to trigger deletion
+        // Long click for delete
         holder.itemView.setOnLongClickListener(v -> {
             if (longClickListener != null) {
                 longClickListener.onTaskLongClicked(holder.getAdapterPosition());
             }
-            return true; // event handled
+            return true;
+        });
+
+        // Single click for edit
+        holder.itemView.setOnClickListener(v -> {
+            if (clickListener != null) {
+                clickListener.onTaskClicked(holder.getAdapterPosition());
+            }
         });
     }
+
 
     @Override
     public int getItemCount() {
@@ -57,3 +74,8 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         void onTaskLongClicked(int position);
     }
 }
+
+public interface OnTaskClickListener {
+    void onTaskClicked(int position);
+}
+
