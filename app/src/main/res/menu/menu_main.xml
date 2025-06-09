@@ -1,6 +1,7 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/action_toggle_theme"
         android:title="Toggle Dark/Light Mode"
-        android:showAsAction="never"/>
+        app:showAsAction="never"/>
 </menu>
