@@ -22,6 +22,8 @@ import com.google.android.material.snackbar.Snackbar;
 import android.app.DatePickerDialog;
 import android.widget.ImageButton;
 import java.util.Calendar;
+import androidx.appcompat.app.AppCompatDelegate;
+import android.widget.Switch;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -31,19 +33,33 @@ public class MainActivity extends AppCompatActivity {
     private View welcomeText;
     private static final String PREFS_NAME = "taskflow_prefs";
     private static final String TASKS_KEY = "tasks";
+    private static final String KEY_THEME_MODE = "theme_mode";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // 1. Apply the saved theme mode before super.onCreate()
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        int mode = prefs.getInt(KEY_THEME_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        AppCompatDelegate.setDefaultNightMode(mode);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Load saved tasks before setting up the adapter
+        // 2. Set up the dark mode switch
+        Switch switchTheme = findViewById(R.id.switchTheme);
+        switchTheme.setChecked(mode == AppCompatDelegate.MODE_NIGHT_YES);
+        switchTheme.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            int newMode = isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO;
+            applyTheme(newMode);
+            recreate(); // Restart activity to apply the theme
+        });
+
+        // 3. Load saved tasks
         loadTasks();
 
+        // 4. Set up RecyclerView and adapter
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-        // Initialize adapter with both long-click and click listeners
         taskAdapter = new TaskAdapter(
                 tasks,
                 new TaskAdapter.OnTaskLongClickListener() {
@@ -61,8 +77,10 @@ public class MainActivity extends AppCompatActivity {
         );
         recyclerView.setAdapter(taskAdapter);
 
+        // 5. Set up welcome message
         welcomeText = findViewById(R.id.welcomeText);
 
+        // 6. FloatingActionButton for adding tasks
         FloatingActionButton fabAddTask = findViewById(R.id.fabAddTask);
         fabAddTask.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -72,7 +90,14 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // Show dialog to add a new task
+
+    private void applyTheme(int mode) {
+        AppCompatDelegate.setDefaultNightMode(mode);
+        // Persist preference
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        prefs.edit().putInt(KEY_THEME_MODE, mode).apply();
+    }
+
     private void showAddTaskDialog() {
         LayoutInflater inflater = LayoutInflater.from(this);
         View dialogView = inflater.inflate(R.layout.dialog_task, null);
@@ -82,7 +107,6 @@ public class MainActivity extends AppCompatActivity {
         ImageButton btnPickDate = dialogView.findViewById(R.id.btnPickDate);
 
         View.OnClickListener pickDateListener = v -> {
-            // Get current date as default
             final Calendar calendar = Calendar.getInstance();
             int year = calendar.get(Calendar.YEAR);
             int month = calendar.get(Calendar.MONTH);
@@ -90,7 +114,6 @@ public class MainActivity extends AppCompatActivity {
 
             DatePickerDialog datePickerDialog = new DatePickerDialog(this,
                     (view, year1, monthOfYear, dayOfMonth) -> {
-                        // monthOfYear is zero-based, so add 1
                         String selectedDate = String.format("%04d-%02d-%02d", year1, monthOfYear + 1, dayOfMonth);
                         inputDueDate.setText(selectedDate);
                     },
@@ -123,7 +146,6 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    // Show dialog to edit an existing task
     private void showEditTaskDialog(int position) {
         Task task = tasks.get(position);
         LayoutInflater inflater = LayoutInflater.from(this);
@@ -131,15 +153,13 @@ public class MainActivity extends AppCompatActivity {
         EditText inputTitle = dialogView.findViewById(R.id.inputTitle);
         EditText inputDescription = dialogView.findViewById(R.id.inputDescription);
         EditText inputDueDate = dialogView.findViewById(R.id.inputDueDate);
+        ImageButton btnPickDate = dialogView.findViewById(R.id.btnPickDate);
 
-        // Pre-fill with existing values
         inputTitle.setText(task.getTitle());
         inputDescription.setText(task.getDescription());
         inputDueDate.setText(task.getDueDate());
-        ImageButton btnPickDate = dialogView.findViewById(R.id.btnPickDate);
 
         View.OnClickListener pickDateListener = v -> {
-            // Get current date as default
             final Calendar calendar = Calendar.getInstance();
             int year = calendar.get(Calendar.YEAR);
             int month = calendar.get(Calendar.MONTH);
@@ -147,7 +167,6 @@ public class MainActivity extends AppCompatActivity {
 
             DatePickerDialog datePickerDialog = new DatePickerDialog(this,
                     (view, year1, monthOfYear, dayOfMonth) -> {
-                        // monthOfYear is zero-based, so add 1
                         String selectedDate = String.format("%04d-%02d-%02d", year1, monthOfYear + 1, dayOfMonth);
                         inputDueDate.setText(selectedDate);
                     },
@@ -180,7 +199,6 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    // Show dialog to delete a task, with undo support
     private void showDeleteTaskDialog(int position) {
         Task deletedTask = tasks.get(position);
         new AlertDialog.Builder(this)
@@ -192,7 +210,6 @@ public class MainActivity extends AppCompatActivity {
                     saveTasks();
                     updateViewVisibility();
 
-                    // Show Snackbar for undo
                     Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content),
                             "Task deleted", Snackbar.LENGTH_LONG);
                     snackbar.setAction("Undo", v -> {
@@ -208,7 +225,6 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    // Save tasks to SharedPreferences as JSON
     private void saveTasks() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
@@ -225,12 +241,10 @@ public class MainActivity extends AppCompatActivity {
             }
             jsonArray.put(obj);
         }
-
         editor.putString(TASKS_KEY, jsonArray.toString());
         editor.apply();
     }
 
-    // Load tasks from SharedPreferences
     private void loadTasks() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         String jsonString = prefs.getString(TASKS_KEY, null);
@@ -251,15 +265,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Hide keyboard utility
     private void hideKeyboard(View view) {
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm != null) {
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
-
-    // Show/hide welcome message vs. task list
     private void updateViewVisibility() {
         if (tasks.isEmpty()) {
             welcomeText.setVisibility(View.VISIBLE);

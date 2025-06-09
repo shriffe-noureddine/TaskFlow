@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -18,22 +17,30 @@
         android:hint="Description (optional)"
         android:layout_marginTop="8dp"/>
 
-    <EditText
-        android:id="@+id/inputDueDate"
-        android:layout_width="0dp"
-        android:layout_weight="1"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Due Date (YYYY-MM-DD)"
-        android:focusable="false"
-        android:clickable="true"
-        android:inputType="none"/>
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical">
 
-    <ImageButton
-        android:id="@+id/btnPickDate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="Pick Date"
-        android:src="@android:drawable/ic_menu_month"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:padding="8dp"/>
+        <EditText
+            android:id="@+id/inputDueDate"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:hint="Due Date (YYYY-MM-DD)"
+            android:focusable="false"
+            android:clickable="true"
+            android:inputType="none"/>
+
+        <ImageButton
+            android:id="@+id/btnPickDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Pick Date"
+            android:src="@android:drawable/ic_menu_month"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp"/>
+    </LinearLayout>
 </LinearLayout>

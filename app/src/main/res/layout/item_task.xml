@@ -18,26 +18,27 @@
             android:layout_height="wrap_content"
             android:textStyle="bold"
             android:textSize="18sp"
-            android:text="Title" />
+            android:textColor="#222222" />
 
         <TextView
             android:id="@+id/taskDescription"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Description"
+            android:textColor="#666666"
             android:textSize="14sp"
             android:layout_marginTop="4dp"
-            android:visibility="gone"/>
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/taskDueDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Due: YYYY-MM-DD"
-            android:textSize="12sp"
             android:textColor="#888888"
+            android:textStyle="italic"
+            android:textSize="12sp"
             android:layout_marginTop="2dp"
-            android:visibility="gone"/>
+            android:visibility="gone" />
+
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>
