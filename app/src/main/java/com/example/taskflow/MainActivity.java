@@ -14,6 +14,11 @@ import java.util.ArrayList;
 import java.util.List;
 import android.content.Context;
 import android.view.inputmethod.InputMethodManager;
+import android.content.SharedPreferences;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 
 // ... imports remain the same
 
@@ -22,12 +27,15 @@ public class MainActivity extends AppCompatActivity {
     private TaskAdapter taskAdapter;
     private RecyclerView recyclerView;
     private View welcomeText;
+    private static final String PREFS_NAME = "taskflow_prefs";
+    private static final String TASKS_KEY = "tasks";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        loadTasks();
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         taskAdapter = new TaskAdapter(tasks, new TaskAdapter.OnTaskLongClickListener() {
@@ -48,6 +56,43 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+    private void saveTasks() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+
+        JSONArray jsonArray = new JSONArray();
+        for (Task task : tasks) {
+            JSONObject obj = new JSONObject();
+            try {
+                obj.put("title", task.getTitle());
+                // If you later add more fields (e.g., due date), add them here.
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            jsonArray.put(obj);
+        }
+        editor.putString(TASKS_KEY, jsonArray.toString());
+        editor.apply();
+    }
+
+    private void loadTasks() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        String jsonString = prefs.getString(TASKS_KEY, null);
+        tasks.clear();
+        if (jsonString != null) {
+            try {
+                JSONArray jsonArray = new JSONArray(jsonString);
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject obj = jsonArray.getJSONObject(i);
+                    String title = obj.getString("title");
+                    // If you add more fields later, retrieve them here.
+                    tasks.add(new Task(title));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     private void showAddTaskDialog() {
         final EditText editText = new EditText(this);
@@ -61,6 +106,7 @@ public class MainActivity extends AppCompatActivity {
                     if (!taskTitle.isEmpty()) {
                         tasks.add(new Task(taskTitle));
                         taskAdapter.notifyItemInserted(tasks.size() - 1);
+                        saveTasks();
                         updateViewVisibility();
 
                         // Scroll to the bottom (latest task)
@@ -88,6 +134,7 @@ public class MainActivity extends AppCompatActivity {
                 .setPositiveButton("Delete", (dialog, which) -> {
                     tasks.remove(position);
                     taskAdapter.notifyItemRemoved(position);
+                    saveTasks();
                     updateViewVisibility();
                 })
                 .setNegativeButton("Cancel", null)
