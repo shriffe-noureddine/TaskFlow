@@ -20,6 +20,9 @@ Personal Task Manager Application for Principles of Software Development Course
 ## Project Structure
 - `/app/src/main/java/`: Java source code
 - `/app/src/main/res/layout/`: XML layouts
+
+
+
 ![1](https://github.com/user-attachments/assets/28ebd0d6-c7e9-4ed4-8924-c226bff591cf)
 ![2](https://github.com/user-attachments/assets/c6551ff8-65f8-417b-9ca2-7e455bb4ab75)
 ![3](https://github.com/user-attachments/assets/e600e13d-0a7d-418f-a616-9c5d6b378594)
