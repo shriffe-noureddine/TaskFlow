@@ -68,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // Show dialog to add a new task
     private void showAddTaskDialog() {
         LayoutInflater inflater = LayoutInflater.from(this);
         View dialogView = inflater.inflate(R.layout.dialog_task, null);
@@ -97,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-
+    // Show dialog to edit an existing task
     private void showEditTaskDialog(int position) {
         Task task = tasks.get(position);
         LayoutInflater inflater = LayoutInflater.from(this);
@@ -132,7 +133,6 @@ public class MainActivity extends AppCompatActivity {
                 .setNegativeButton("Cancel", null)
                 .show();
     }
-
 
     // Show dialog to delete a task, with undo support
     private void showDeleteTaskDialog(int position) {
@@ -172,12 +172,14 @@ public class MainActivity extends AppCompatActivity {
             JSONObject obj = new JSONObject();
             try {
                 obj.put("title", task.getTitle());
-                // Add other fields here if needed
+                obj.put("description", task.getDescription());
+                obj.put("dueDate", task.getDueDate());
             } catch (JSONException e) {
                 e.printStackTrace();
             }
             jsonArray.put(obj);
         }
+
         editor.putString(TASKS_KEY, jsonArray.toString());
         editor.apply();
     }
@@ -193,7 +195,9 @@ public class MainActivity extends AppCompatActivity {
                 for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject obj = jsonArray.getJSONObject(i);
                     String title = obj.getString("title");
-                    tasks.add(new Task(title));
+                    String desc = obj.optString("description", "");
+                    String due = obj.optString("dueDate", "");
+                    tasks.add(new Task(title, desc, due));
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
