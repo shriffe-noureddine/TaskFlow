@@ -13,29 +13,52 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.List;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.view.inputmethod.InputMethodManager;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import com.google.android.material.snackbar.Snackbar;
+import android.app.DatePickerDialog;
+import android.widget.ImageButton;
+import java.util.Calendar;
 
-// ... imports remain the same
 
 public class MainActivity extends AppCompatActivity {
     private List<Task> tasks = new ArrayList<>();
     private TaskAdapter taskAdapter;
     private RecyclerView recyclerView;
     private View welcomeText;
+    private static final String PREFS_NAME = "taskflow_prefs";
+    private static final String TASKS_KEY = "tasks";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Load saved tasks before setting up the adapter
+        loadTasks();
+
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        taskAdapter = new TaskAdapter(tasks, new TaskAdapter.OnTaskLongClickListener() {
-            @Override
-            public void onTaskLongClicked(int position) {
-                showDeleteTaskDialog(position);
-            }
-        });
+
+        // Initialize adapter with both long-click and click listeners
+        taskAdapter = new TaskAdapter(
+                tasks,
+                new TaskAdapter.OnTaskLongClickListener() {
+                    @Override
+                    public void onTaskLongClicked(int position) {
+                        showDeleteTaskDialog(position);
+                    }
+                },
+                new TaskAdapter.OnTaskClickListener() {
+                    @Override
+                    public void onTaskClicked(int position) {
+                        showEditTaskDialog(position);
+                    }
+                }
+        );
         recyclerView.setAdapter(taskAdapter);
 
         welcomeText = findViewById(R.id.welcomeText);
@@ -49,24 +72,49 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // Show dialog to add a new task
     private void showAddTaskDialog() {
-        final EditText editText = new EditText(this);
-        editText.setHint("Enter task title");
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View dialogView = inflater.inflate(R.layout.dialog_task, null);
+        EditText inputTitle = dialogView.findViewById(R.id.inputTitle);
+        EditText inputDescription = dialogView.findViewById(R.id.inputDescription);
+        EditText inputDueDate = dialogView.findViewById(R.id.inputDueDate);
+        ImageButton btnPickDate = dialogView.findViewById(R.id.btnPickDate);
+
+        View.OnClickListener pickDateListener = v -> {
+            // Get current date as default
+            final Calendar calendar = Calendar.getInstance();
+            int year = calendar.get(Calendar.YEAR);
+            int month = calendar.get(Calendar.MONTH);
+            int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+            DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                    (view, year1, monthOfYear, dayOfMonth) -> {
+                        // monthOfYear is zero-based, so add 1
+                        String selectedDate = String.format("%04d-%02d-%02d", year1, monthOfYear + 1, dayOfMonth);
+                        inputDueDate.setText(selectedDate);
+                    },
+                    year, month, day);
+            datePickerDialog.show();
+        };
+
+        inputDueDate.setOnClickListener(pickDateListener);
+        btnPickDate.setOnClickListener(pickDateListener);
 
         new AlertDialog.Builder(this)
                 .setTitle("Add Task")
-                .setView(editText)
+                .setView(dialogView)
                 .setPositiveButton("Add", (dialog, which) -> {
-                    String taskTitle = editText.getText().toString().trim();
-                    if (!taskTitle.isEmpty()) {
-                        tasks.add(new Task(taskTitle));
+                    String title = inputTitle.getText().toString().trim();
+                    String desc = inputDescription.getText().toString().trim();
+                    String due = inputDueDate.getText().toString().trim();
+
+                    if (!title.isEmpty()) {
+                        tasks.add(new Task(title, desc, due));
                         taskAdapter.notifyItemInserted(tasks.size() - 1);
+                        saveTasks();
                         updateViewVisibility();
-
-                        // Scroll to the bottom (latest task)
                         recyclerView.scrollToPosition(tasks.size() - 1);
-                        hideKeyboard(editText);
-
                     } else {
                         Toast.makeText(this, "Task title cannot be empty", Toast.LENGTH_SHORT).show();
                     }
@@ -74,6 +122,136 @@ public class MainActivity extends AppCompatActivity {
                 .setNegativeButton("Cancel", null)
                 .show();
     }
+
+    // Show dialog to edit an existing task
+    private void showEditTaskDialog(int position) {
+        Task task = tasks.get(position);
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View dialogView = inflater.inflate(R.layout.dialog_task, null);
+        EditText inputTitle = dialogView.findViewById(R.id.inputTitle);
+        EditText inputDescription = dialogView.findViewById(R.id.inputDescription);
+        EditText inputDueDate = dialogView.findViewById(R.id.inputDueDate);
+
+        // Pre-fill with existing values
+        inputTitle.setText(task.getTitle());
+        inputDescription.setText(task.getDescription());
+        inputDueDate.setText(task.getDueDate());
+        ImageButton btnPickDate = dialogView.findViewById(R.id.btnPickDate);
+
+        View.OnClickListener pickDateListener = v -> {
+            // Get current date as default
+            final Calendar calendar = Calendar.getInstance();
+            int year = calendar.get(Calendar.YEAR);
+            int month = calendar.get(Calendar.MONTH);
+            int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+            DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                    (view, year1, monthOfYear, dayOfMonth) -> {
+                        // monthOfYear is zero-based, so add 1
+                        String selectedDate = String.format("%04d-%02d-%02d", year1, monthOfYear + 1, dayOfMonth);
+                        inputDueDate.setText(selectedDate);
+                    },
+                    year, month, day);
+            datePickerDialog.show();
+        };
+
+        inputDueDate.setOnClickListener(pickDateListener);
+        btnPickDate.setOnClickListener(pickDateListener);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Edit Task")
+                .setView(dialogView)
+                .setPositiveButton("Save", (dialog, which) -> {
+                    String title = inputTitle.getText().toString().trim();
+                    String desc = inputDescription.getText().toString().trim();
+                    String due = inputDueDate.getText().toString().trim();
+
+                    if (!title.isEmpty()) {
+                        task.setTitle(title);
+                        task.setDescription(desc);
+                        task.setDueDate(due);
+                        taskAdapter.notifyItemChanged(position);
+                        saveTasks();
+                    } else {
+                        Toast.makeText(this, "Task title cannot be empty", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    // Show dialog to delete a task, with undo support
+    private void showDeleteTaskDialog(int position) {
+        Task deletedTask = tasks.get(position);
+        new AlertDialog.Builder(this)
+                .setTitle("Delete Task")
+                .setMessage("Are you sure you want to delete this task?")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    tasks.remove(position);
+                    taskAdapter.notifyItemRemoved(position);
+                    saveTasks();
+                    updateViewVisibility();
+
+                    // Show Snackbar for undo
+                    Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content),
+                            "Task deleted", Snackbar.LENGTH_LONG);
+                    snackbar.setAction("Undo", v -> {
+                        tasks.add(position, deletedTask);
+                        taskAdapter.notifyItemInserted(position);
+                        saveTasks();
+                        updateViewVisibility();
+                        recyclerView.scrollToPosition(position);
+                    });
+                    snackbar.show();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    // Save tasks to SharedPreferences as JSON
+    private void saveTasks() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+
+        JSONArray jsonArray = new JSONArray();
+        for (Task task : tasks) {
+            JSONObject obj = new JSONObject();
+            try {
+                obj.put("title", task.getTitle());
+                obj.put("description", task.getDescription());
+                obj.put("dueDate", task.getDueDate());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            jsonArray.put(obj);
+        }
+
+        editor.putString(TASKS_KEY, jsonArray.toString());
+        editor.apply();
+    }
+
+    // Load tasks from SharedPreferences
+    private void loadTasks() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        String jsonString = prefs.getString(TASKS_KEY, null);
+        tasks.clear();
+        if (jsonString != null) {
+            try {
+                JSONArray jsonArray = new JSONArray(jsonString);
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject obj = jsonArray.getJSONObject(i);
+                    String title = obj.getString("title");
+                    String desc = obj.optString("description", "");
+                    String due = obj.optString("dueDate", "");
+                    tasks.add(new Task(title, desc, due));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // Hide keyboard utility
     private void hideKeyboard(View view) {
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm != null) {
@@ -81,19 +259,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void showDeleteTaskDialog(int position) {
-        new AlertDialog.Builder(this)
-                .setTitle("Delete Task")
-                .setMessage("Are you sure you want to delete this task?")
-                .setPositiveButton("Delete", (dialog, which) -> {
-                    tasks.remove(position);
-                    taskAdapter.notifyItemRemoved(position);
-                    updateViewVisibility();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
-    }
-
+    // Show/hide welcome message vs. task list
     private void updateViewVisibility() {
         if (tasks.isEmpty()) {
             welcomeText.setVisibility(View.VISIBLE);
