@@ -23,10 +23,8 @@ import android.app.DatePickerDialog;
 import android.widget.ImageButton;
 import java.util.Calendar;
 import androidx.appcompat.app.AppCompatDelegate;
+import android.widget.Switch;
 
-// MISSING IMPORTS (add these!)
-import android.view.Menu;
-import android.view.MenuItem;
 
 public class MainActivity extends AppCompatActivity {
     private List<Task> tasks = new ArrayList<>();
@@ -39,15 +37,27 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Theme: apply before super.onCreate()
+        // 1. Apply the saved theme mode before super.onCreate()
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         int mode = prefs.getInt(KEY_THEME_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         AppCompatDelegate.setDefaultNightMode(mode);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // 2. Set up the dark mode switch
+        Switch switchTheme = findViewById(R.id.switchTheme);
+        switchTheme.setChecked(mode == AppCompatDelegate.MODE_NIGHT_YES);
+        switchTheme.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            int newMode = isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO;
+            applyTheme(newMode);
+            recreate(); // Restart activity to apply the theme
+        });
+
+        // 3. Load saved tasks
         loadTasks();
 
+        // 4. Set up RecyclerView and adapter
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         taskAdapter = new TaskAdapter(
@@ -67,8 +77,10 @@ public class MainActivity extends AppCompatActivity {
         );
         recyclerView.setAdapter(taskAdapter);
 
+        // 5. Set up welcome message
         welcomeText = findViewById(R.id.welcomeText);
 
+        // 6. FloatingActionButton for adding tasks
         FloatingActionButton fabAddTask = findViewById(R.id.fabAddTask);
         fabAddTask.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -77,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
 
     private void applyTheme(int mode) {
         AppCompatDelegate.setDefaultNightMode(mode);
@@ -258,31 +271,6 @@ public class MainActivity extends AppCompatActivity {
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.action_toggle_theme) {
-            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-            int mode = prefs.getInt(KEY_THEME_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-            int newMode;
-            if (mode == AppCompatDelegate.MODE_NIGHT_YES) {
-                newMode = AppCompatDelegate.MODE_NIGHT_NO;
-            } else {
-                newMode = AppCompatDelegate.MODE_NIGHT_YES;
-            }
-            applyTheme(newMode);
-            recreate();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
     private void updateViewVisibility() {
         if (tasks.isEmpty()) {
             welcomeText.setVisibility(View.VISIBLE);
