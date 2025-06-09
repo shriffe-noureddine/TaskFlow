@@ -18,9 +18,8 @@ import android.content.SharedPreferences;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-
-// ... imports remain the same
+import com.google.android.material.snackbar.Snackbar;
+import android.view.ViewGroup;
 
 public class MainActivity extends AppCompatActivity {
     private List<Task> tasks = new ArrayList<>();
@@ -128,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showDeleteTaskDialog(int position) {
+        Task deletedTask = tasks.get(position); // Save for undo
         new AlertDialog.Builder(this)
                 .setTitle("Delete Task")
                 .setMessage("Are you sure you want to delete this task?")
@@ -136,10 +136,24 @@ public class MainActivity extends AppCompatActivity {
                     taskAdapter.notifyItemRemoved(position);
                     saveTasks();
                     updateViewVisibility();
+
+                    // Show Snackbar for undo
+                    Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content),
+                            "Task deleted", Snackbar.LENGTH_LONG);
+                    snackbar.setAction("Undo", v -> {
+                        // Restore the task
+                        tasks.add(position, deletedTask);
+                        taskAdapter.notifyItemInserted(position);
+                        saveTasks();
+                        updateViewVisibility();
+                        recyclerView.scrollToPosition(position);
+                    });
+                    snackbar.show();
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
     }
+
 
     private void updateViewVisibility() {
         if (tasks.isEmpty()) {
