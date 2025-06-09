@@ -11,20 +11,15 @@ import java.util.List;
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
     private List<Task> tasks;
     private OnTaskLongClickListener longClickListener;
-
-    public TaskAdapter(List<Task> tasks, OnTaskLongClickListener longClickListener) {
-        this.tasks = tasks;
-        this.longClickListener = longClickListener;
-    }
-
     private OnTaskClickListener clickListener;
 
-    public TaskAdapter(List<Task> tasks, OnTaskLongClickListener longClickListener, OnTaskClickListener clickListener) {
+    public TaskAdapter(List<Task> tasks,
+                       OnTaskLongClickListener longClickListener,
+                       OnTaskClickListener clickListener) {
         this.tasks = tasks;
         this.longClickListener = longClickListener;
         this.clickListener = clickListener;
     }
-
 
     @NonNull
     @Override
@@ -39,7 +34,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         Task task = tasks.get(position);
         holder.textView.setText(task.getTitle());
 
-        // Long click for delete
         holder.itemView.setOnLongClickListener(v -> {
             if (longClickListener != null) {
                 longClickListener.onTaskLongClicked(holder.getAdapterPosition());
@@ -47,14 +41,12 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             return true;
         });
 
-        // Single click for edit
         holder.itemView.setOnClickListener(v -> {
             if (clickListener != null) {
                 clickListener.onTaskClicked(holder.getAdapterPosition());
             }
         });
     }
-
 
     @Override
     public int getItemCount() {
@@ -69,13 +61,12 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         }
     }
 
-    // Interface for long-clicks
+    // Listener interfaces INSIDE the class!
     public interface OnTaskLongClickListener {
         void onTaskLongClicked(int position);
     }
-}
 
-public interface OnTaskClickListener {
-    void onTaskClicked(int position);
+    public interface OnTaskClickListener {
+        void onTaskClicked(int position);
+    }
 }
-
