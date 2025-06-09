@@ -9,6 +9,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
+
+
     private List<Task> tasks;
     private OnTaskLongClickListener longClickListener;
     private OnTaskClickListener clickListener;
@@ -25,21 +27,30 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     @Override
     public TaskViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(android.R.layout.simple_list_item_1, parent, false);
+                .inflate(R.layout.item_task, parent, false);
         return new TaskViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
         Task task = tasks.get(position);
-        holder.textView.setText(task.getTitle());
+        holder.titleView.setText(task.getTitle());
 
-        holder.itemView.setOnLongClickListener(v -> {
-            if (longClickListener != null) {
-                longClickListener.onTaskLongClicked(holder.getAdapterPosition());
-            }
-            return true;
-        });
+        // Description
+        if (task.getDescription() != null && !task.getDescription().isEmpty()) {
+            holder.descriptionView.setVisibility(View.VISIBLE);
+            holder.descriptionView.setText(task.getDescription());
+        } else {
+            holder.descriptionView.setVisibility(View.GONE);
+        }
+
+        // Due date
+        if (task.getDueDate() != null && !task.getDueDate().isEmpty()) {
+            holder.dueDateView.setVisibility(View.VISIBLE);
+            holder.dueDateView.setText("Due: " + task.getDueDate());
+        } else {
+            holder.dueDateView.setVisibility(View.GONE);
+        }
 
         holder.itemView.setOnClickListener(v -> {
             if (clickListener != null) {
@@ -54,12 +65,16 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     }
 
     public static class TaskViewHolder extends RecyclerView.ViewHolder {
-        TextView textView;
+        TextView titleView, descriptionView, dueDateView;
+
         public TaskViewHolder(@NonNull View itemView) {
             super(itemView);
-            textView = itemView.findViewById(android.R.id.text1);
+            titleView = itemView.findViewById(R.id.taskTitle);
+            descriptionView = itemView.findViewById(R.id.taskDescription);
+            dueDateView = itemView.findViewById(R.id.taskDueDate);
         }
     }
+
 
     // Listener interfaces INSIDE the class!
     public interface OnTaskLongClickListener {
